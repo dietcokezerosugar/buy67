@@ -72,10 +72,17 @@ export async function POST(request: Request) {
         }
 
         // Validate amount matches
-        if (order.amount_paise !== amountPaise) {
+        // We check against order.amount_paise (which buy67 stores)
+        // The webhook might send the original amount in requested_amount_paise
+        // or the offset amount in amount_paise.
+        const matchesRequest = order.amount_paise === (payload.data?.requested_amount_paise || payload.requested_amount_paise);
+        const matchesFinal = order.amount_paise === (payload.data?.amount_paise || payload.amount_paise || payload.data?.amount || payload.amount);
+
+        if (!matchesRequest && !matchesFinal) {
             console.error('Amount mismatch:', {
                 expected: order.amount_paise,
-                received: amountPaise,
+                received_request: payload.data?.requested_amount_paise || payload.requested_amount_paise,
+                received_final: payload.data?.amount_paise || payload.amount_paise,
             });
             return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
         }
