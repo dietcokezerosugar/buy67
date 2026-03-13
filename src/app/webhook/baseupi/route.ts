@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { verifyWebhookSignature } from '@/lib/baseupi';
+import type { BaseUPIWebhookPayload } from '@/types';
 
 // Set of processed webhook IDs for replay protection
 const processedWebhooks = new Set<string>();
@@ -17,44 +18,29 @@ export async function POST(request: Request) {
         }
 
         // Verify HMAC-SHA256 signature
-        try {
-            const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
-            if (!isValid) {
-                console.error('Invalid webhook signature');
-                return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
-            }
-        } catch {
-            console.error('Signature verification failed');
+        const isValid = verifyWebhookSignature(rawBody, signature, webhookSecret);
+        if (!isValid) {
+            console.error('Invalid webhook signature');
             return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
         }
 
-        const payload = JSON.parse(rawBody);
-        const event = payload.event;
+        const payload: BaseUPIWebhookPayload = JSON.parse(rawBody);
 
-        // Handle both nested 'data' and flat JSON structure based on BaseUPI docs
-        const orderId = payload.data?.order_id || payload.order_id;
-        const merchantOrderId = payload.data?.merchant_order_id || payload.merchant_order_id || payload.metadata?.merchant_order_id;
+        if (payload.event !== 'payment.completed') {
+            return NextResponse.json({ success: true, message: 'Event ignored' });
+        }
 
-        // Use requested_amount_paise if available (original amount), 
-        // fallback to amount_paise (final amount with offset)
-        const amountPaise = payload.data?.requested_amount_paise || payload.requested_amount_paise ||
-            payload.data?.amount_paise || payload.data?.amount ||
-            payload.amount_paise || payload.amount;
+        const { order_id, merchant_order_id, amount_paise } = payload;
 
-        if (!merchantOrderId || !amountPaise) {
+        if (!merchant_order_id || !amount_paise) {
             console.error('Missing required fields in webhook payload', payload);
             return NextResponse.json({ error: 'Invalid payload format' }, { status: 400 });
         }
 
         // Replay protection: check if we already processed this webhook
-        const webhookId = `${merchantOrderId}:${event}`;
+        const webhookId = `${merchant_order_id}:payment.completed`;
         if (processedWebhooks.has(webhookId)) {
             return NextResponse.json({ success: true, message: 'Already processed' });
-        }
-
-        if (event !== 'payment.completed') {
-            // We only care about completed payments
-            return NextResponse.json({ success: true, message: 'Event ignored' });
         }
 
         const supabase = createAdminClient();
@@ -63,26 +49,21 @@ export async function POST(request: Request) {
         const { data: order, error: orderError } = await supabase
             .from('orders')
             .select('*')
-            .eq('merchant_order_id', merchantOrderId)
+            .eq('merchant_order_id', merchant_order_id)
             .single();
 
         if (orderError || !order) {
-            console.error('Order not found:', merchantOrderId);
+            console.error('Order not found:', merchant_order_id);
             return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
         // Validate amount matches
-        // We check against order.amount_paise (which buy67 stores)
-        // The webhook might send the original amount in requested_amount_paise
-        // or the offset amount in amount_paise.
-        const matchesRequest = order.amount_paise === (payload.data?.requested_amount_paise || payload.requested_amount_paise);
-        const matchesFinal = order.amount_paise === (payload.data?.amount_paise || payload.amount_paise || payload.data?.amount || payload.amount);
-
-        if (!matchesRequest && !matchesFinal) {
+        // Note: The webhook amount_paise is the final amount (with offset)
+        // We compare it with what the user actually paid
+        if (order.amount_paise !== amount_paise) {
             console.error('Amount mismatch:', {
                 expected: order.amount_paise,
-                received_request: payload.data?.requested_amount_paise || payload.requested_amount_paise,
-                received_final: payload.data?.amount_paise || payload.amount_paise,
+                received: amount_paise,
             });
             return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
         }
@@ -98,9 +79,9 @@ export async function POST(request: Request) {
             .from('orders')
             .update({
                 status: 'COMPLETED',
-                baseupi_order_id: orderId,
+                baseupi_order_id: order_id,
             })
-            .eq('merchant_order_id', merchantOrderId);
+            .eq('merchant_order_id', merchant_order_id);
 
         if (updateError) {
             console.error('Failed to update order:', updateError);
@@ -109,6 +90,7 @@ export async function POST(request: Request) {
 
         // Mark as processed
         processedWebhooks.add(webhookId);
+        return NextResponse.json({ success: true });
 
         // Cleanup old entries (keep last 10000)
         if (processedWebhooks.size > 10000) {

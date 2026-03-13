@@ -78,20 +78,20 @@ export interface CartItem {
 export interface BaseUPICreateOrderResponse {
   success: boolean;
   data: {
-    order_id: string;
+    id: string; // Internal ID
+    public_order_id: string; // Order ID used in checkout URL
     checkout_url: string;
     amount_paise: number;
   };
 }
 
 export interface BaseUPIWebhookPayload {
-  event: string;
-  data: {
-    order_id: string;
-    merchant_order_id: string;
-    amount: number;
-    status: string;
-  };
+  event: 'payment.completed';
+  order_id: string; // The public_order_id
+  merchant_order_id: string;
+  amount_paise: number;
+  status: 'COMPLETED';
+  metadata: Record<string, any>;
 }
 
 export interface CreateOrderRequest {

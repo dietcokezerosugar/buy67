@@ -120,10 +120,12 @@ export async function POST(request: Request) {
         try {
             baseupiResponse = await createBaseUPIOrder({
                 merchant_order_id: merchantOrderId,
-                amount: totalPaise,
-                buyer_email,
-                webhook_url: `${baseUrl}/webhook/baseupi`,
+                amount_paise: totalPaise,
+                customer_email: buyer_email,
                 redirect_url: `${baseUrl}/p/thank-you?order=${merchantOrderId}`,
+                metadata: {
+                    user_id: 'guest', // You might want to pull this from auth if available
+                }
             });
         } catch (baseupiError) {
             console.error('BaseUPI API error:', baseupiError);
@@ -150,7 +152,7 @@ export async function POST(request: Request) {
                 buyer_email,
                 amount_paise: baseupiResponse.data.amount_paise || totalPaise,
                 status: 'PENDING',
-                baseupi_order_id: baseupiResponse.data.order_id,
+                baseupi_order_id: baseupiResponse.data.public_order_id, // Store the public ID
             })
             .select()
             .single();

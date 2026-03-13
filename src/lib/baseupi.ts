@@ -1,32 +1,36 @@
 import type { BaseUPICreateOrderResponse } from '@/types';
 
-const BASEUPI_API_URL = 'https://baseupi.netlify.app/api/v1';
+const BASEUPI_URL = process.env.BASEUPI_URL || 'https://baseupi.netlify.app';
 
 interface CreateBaseUPIOrderParams {
     merchant_order_id: string;
-    amount: number; // in paise
-    buyer_email: string;
-    webhook_url: string;
-    redirect_url?: string;
+    amount_paise: number;
+    customer_email: string;
+    redirect_url: string;
+    metadata?: Record<string, any>;
 }
 
 export async function createBaseUPIOrder(
     params: CreateBaseUPIOrderParams
 ): Promise<BaseUPICreateOrderResponse> {
-    const response = await fetch(`${BASEUPI_API_URL}/orders`, {
+    const response = await fetch(`${BASEUPI_URL}/api/v1/orders`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'x-api-key': process.env.BASEUPI_API_KEY || '',
-            'Authorization': `Bearer ${process.env.BASEUPI_SECRET_KEY || ''}`,
         },
         body: JSON.stringify({
             merchant_order_id: params.merchant_order_id,
-            amount_paise: params.amount,
-            buyer_email: params.buyer_email,
-            webhook_url: params.webhook_url,
+            customer_email: params.customer_email,
+            line_items: [
+                {
+                    name: "Order " + params.merchant_order_id,
+                    amount_paise: params.amount_paise,
+                    quantity: 1
+                }
+            ],
             redirect_url: params.redirect_url,
-            line_items: [{ name: 'Digital Product', amount_paise: params.amount, quantity: 1 }],
+            metadata: params.metadata || {},
         }),
     });
 
@@ -37,12 +41,12 @@ export async function createBaseUPIOrder(
 
     const data = await response.json();
 
-    // The actual response from BaseUPI is flat, but our code expects it 
-    // wrapped in { success: true, data: {...} }
+    // Align with guide response: { id, public_order_id, checkout_url, amount_paise }
     return {
         success: true,
         data: {
-            order_id: data.order_id,
+            id: data.id,
+            public_order_id: data.public_order_id,
             checkout_url: data.checkout_url,
             amount_paise: data.amount_paise
         }
@@ -50,18 +54,16 @@ export async function createBaseUPIOrder(
 }
 
 export function verifyWebhookSignature(
-    payload: string,
+    rawBody: string,
     signature: string,
     secret: string
 ): boolean {
-    if (!signature || !secret || !payload) return false;
+    if (!signature || !secret || !rawBody) return false;
 
     try {
         const crypto = require('crypto');
-        const expectedSignature = crypto
-            .createHmac('sha256', secret)
-            .update(payload)
-            .digest('hex');
+        const hmac = crypto.createHmac('sha256', secret);
+        const expectedSignature = hmac.update(rawBody).digest('hex');
 
         if (signature.length !== expectedSignature.length) {
             return false;
