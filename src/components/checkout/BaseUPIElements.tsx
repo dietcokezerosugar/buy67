@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BaseUPIPaymentElement } from 'baseupi-react';
 
 interface BaseUPIElementsProps {
     orderId: string;
@@ -10,87 +11,21 @@ interface BaseUPIElementsProps {
     onReady?: () => void;
 }
 
-declare global {
-    interface Window {
-        BaseUPI: any;
-    }
-}
-
 export function BaseUPIElements({ orderId, onSuccess, onError, onReady }: BaseUPIElementsProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const scriptLoadedRef = useRef(false);
 
-    useEffect(() => {
-        if (!orderId) return;
+    const handleReady = () => {
+        setLoading(false);
+        onReady?.();
+    };
 
-        const loadScript = () => {
-            if (window.BaseUPI) {
-                initializeElements();
-                return;
-            }
-
-            const script = document.createElement('script');
-            script.src = 'https://baseupi.app/v1/elements.js';
-            script.async = true;
-            script.onload = () => {
-                initializeElements();
-            };
-            script.onerror = () => {
-                setError('Failed to load BaseUPI SDK');
-                setLoading(false);
-            };
-            document.body.appendChild(script);
-        };
-
-        const initializeElements = () => {
-            try {
-                // 1. Initialize Elements
-                const elements = window.BaseUPI.elements();
-
-                // 2. Create the Payment Element
-                const paymentElement = elements.create('payment', {
-                    orderId: orderId
-                });
-
-                // 3. Mount to your container
-                if (containerRef.current) {
-                    paymentElement.mount('#baseupi-payment-element');
-                }
-
-                // 4. Handle Lifecycle
-                paymentElement.on('ready', () => {
-                    setLoading(false);
-                    onReady?.();
-                });
-
-                paymentElement.on('success', (order: any) => {
-                    onSuccess(order);
-                });
-
-                paymentElement.on('error', (err: any) => {
-                    console.error('BaseUPI Element Error:', err);
-                    setError(err.message || 'An error occurred during payment');
-                    onError?.(err);
-                });
-
-            } catch (err: any) {
-                console.error('BaseUPI Initialization Error:', err);
-                setError(err.message || 'Failed to initialize payment element');
-                setLoading(false);
-            }
-        };
-
-        loadScript();
-
-        return () => {
-            // Cleanup logic if BaseUPI SDK supports it, otherwise manually clear container
-            if (containerRef.current) {
-                containerRef.current.innerHTML = '';
-            }
-        };
-    }, [orderId, onSuccess, onError, onReady]);
+    const handleError = (err: any) => {
+        console.error('BaseUPI Element Error:', err);
+        setError(err.message || 'An error occurred during payment');
+        onError?.(err);
+        setLoading(false);
+    };
 
     return (
         <Card className="w-full max-w-md mx-auto overflow-hidden border-2 border-[hsl(var(--primary)/0.1)] shadow-xl glass">
@@ -106,8 +41,8 @@ export function BaseUPIElements({ orderId, onSuccess, onError, onReady }: BaseUP
                     </div>
                 )}
 
-                <div className="relative min-h-[300px] flex flex-col items-center justify-center">
-                    {loading && (
+                <div className="relative min-h-[150px] flex flex-col items-center justify-center">
+                    {loading && !error && (
                         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[hsl(var(--background)/0.5)] backdrop-blur-sm z-10 rounded-lg">
                             <svg
                                 className="animate-spin h-8 w-8 text-[hsl(var(--primary))]"
@@ -135,13 +70,21 @@ export function BaseUPIElements({ orderId, onSuccess, onError, onReady }: BaseUP
                         </div>
                     )}
 
-                    <div 
-                        id="baseupi-payment-element" 
-                        ref={containerRef}
+                    <BaseUPIPaymentElement
+                        orderId={orderId}
+                        onSuccess={onSuccess}
+                        onReady={handleReady}
                         className="w-full"
-                    >
-                        {/* BaseUPI Element will be mounted here */}
-                    </div>
+                        appearance={{
+                            variables: {
+                                colorPrimary: '#6366f1', // Our main Accent color
+                                colorBackground: 'transparent',
+                                colorText: '#111827',
+                                fontFamily: "'Inter', sans-serif",
+                                borderRadius: '8px'
+                            }
+                        }}
+                    />
                 </div>
 
                 <div className="mt-6 flex items-center justify-center gap-2 text-[10px] text-[hsl(var(--muted-foreground))] uppercase tracking-widest font-semibold opacity-70">

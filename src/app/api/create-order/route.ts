@@ -118,27 +118,37 @@ export async function POST(request: Request) {
         // Create BaseUPI order
         let baseupiResponse;
         try {
-            baseupiResponse = await createBaseUPIOrder({
+            const { BaseUPI } = await import('baseupi');
+            const baseupi = new BaseUPI(process.env.BASEUPI_API_KEY!);
+            
+            const order = await baseupi.orders.create({
                 merchant_order_id: merchantOrderId,
-                amount_paise: totalPaise,
                 customer_email: buyer_email,
+                line_items: [
+                    {
+                        name: items.length === 1 ? products[0].title : `Order ${merchantOrderId}`,
+                        amount_paise: totalPaise,
+                        quantity: 1
+                    }
+                ],
                 redirect_url: `${baseUrl}/p/thank-you?order=${merchantOrderId}`,
                 metadata: {
-                    user_id: 'guest', // You might want to pull this from auth if available
+                    user_id: 'guest',
                 }
             });
-        } catch (baseupiError) {
-            console.error('BaseUPI API error:', baseupiError);
-            return NextResponse.json(
-                { success: false, error: 'BaseUPI API failed: ' + (baseupiError instanceof Error ? baseupiError.message : 'Unknown error') },
-                { status: 500 }
-            );
-        }
 
-        if (!baseupiResponse.success) {
-            console.error('BaseUPI order failed:', baseupiResponse);
+            baseupiResponse = {
+                success: true,
+                data: {
+                    public_order_id: order.order_id,
+                    checkout_url: order.checkout_url,
+                    amount_paise: order.amount_paise
+                }
+            };
+        } catch (baseupiError: any) {
+            console.error('BaseUPI SDK error:', baseupiError);
             return NextResponse.json(
-                { success: false, error: baseupiResponse.error || 'Failed to create payment order' },
+                { success: false, error: 'BaseUPI payment setup failed: ' + (baseupiError.message || 'Unknown error') },
                 { status: 500 }
             );
         }
