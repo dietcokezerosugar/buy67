@@ -138,7 +138,7 @@ export async function POST(request: Request) {
         if (!baseupiResponse.success) {
             console.error('BaseUPI order failed:', baseupiResponse);
             return NextResponse.json(
-                { success: false, error: 'Failed to create payment order' },
+                { success: false, error: baseupiResponse.error || 'Failed to create payment order' },
                 { status: 500 }
             );
         }

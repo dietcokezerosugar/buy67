@@ -49,16 +49,27 @@ export async function createBaseUPIOrder(
 
     const data = await response.json();
 
-    // The API might return the order directly or wrapped in a data property
-    const order = data.data || data;
+    // Aggressive parsing to handle different API response formats
+    // format 1: { success: true, data: { public_order_id: '...' } }
+    // format 2: { success: true, order: { public_order_id: '...' } }
+    // format 3: { public_order_id: '...' } (direct object)
+    const order = data.data || data.order || data;
+
+    // Support both 'public_order_id' and 'order_id' (used in some SDK versions)
+    const publicId = order.public_order_id || order.order_id || order.id;
+
+    if (!publicId) {
+        console.error('BaseUPI Response Parsing Failed. Response:', data);
+        throw new Error('Could not find public_order_id or order_id in BaseUPI response');
+    }
 
     return {
         success: true,
         data: {
-            id: order.id || order.public_order_id,
-            public_order_id: order.public_order_id,
+            id: order.id || publicId,
+            public_order_id: publicId,
             checkout_url: order.checkout_url || '',
-            amount_paise: order.amount_paise
+            amount_paise: order.amount_paise || params.amount_paise
         }
     };
 }

@@ -83,6 +83,7 @@ export interface BaseUPICreateOrderResponse {
     checkout_url: string;
     amount_paise: number;
   };
+  error?: string;
 }
 
 export interface BaseUPIWebhookPayload {
