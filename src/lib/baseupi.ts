@@ -1,6 +1,6 @@
 import type { BaseUPICreateOrderResponse } from '@/types';
 
-const BASEUPI_URL = process.env.BASEUPI_URL || 'https://baseupi.netlify.app';
+const BASEUPI_URL = process.env.BASEUPI_URL || 'https://baseupi.app';
 
 interface CreateBaseUPIOrderParams {
     merchant_order_id: string;
@@ -30,25 +30,35 @@ export async function createBaseUPIOrder(
                 }
             ],
             redirect_url: params.redirect_url,
+            callback_url: params.redirect_url, // Some versions use callback_url
             metadata: params.metadata || {},
         }),
     });
 
     if (!response.ok) {
         const errorText = await response.text();
-        throw new Error(`BaseUPI API error: ${response.status} - ${errorText}`);
+        let errorMessage = `Status ${response.status}`;
+        try {
+            const errorJson = JSON.parse(errorText);
+            errorMessage = errorJson.error || errorJson.message || errorMessage;
+        } catch {
+            errorMessage = errorText || errorMessage;
+        }
+        throw new Error(`BaseUPI API error: ${errorMessage}`);
     }
 
     const data = await response.json();
 
-    // Align with guide response: { id, public_order_id, checkout_url, amount_paise }
+    // The API might return the order directly or wrapped in a data property
+    const order = data.data || data;
+
     return {
         success: true,
         data: {
-            id: data.id,
-            public_order_id: data.public_order_id,
-            checkout_url: data.checkout_url,
-            amount_paise: data.amount_paise
+            id: order.id || order.public_order_id,
+            public_order_id: order.public_order_id,
+            checkout_url: order.checkout_url || '',
+            amount_paise: order.amount_paise
         }
     };
 }
