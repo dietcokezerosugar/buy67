@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BaseUPIElements } from '@/components/checkout/BaseUPIElements';
 import type { Product } from '@/types';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/utils';
@@ -18,6 +19,7 @@ export function BuyButton({ product }: BuyButtonProps) {
     const [couponApplied, setCouponApplied] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [checkoutOrderId, setCheckoutOrderId] = useState<string | null>(null);
     const addItem = useCartStore((state) => state.addItem);
 
     const handleValidateCoupon = async () => {
@@ -58,9 +60,6 @@ export function BuyButton({ product }: BuyButtonProps) {
         setError('');
 
         try {
-            // Open popup first
-            const popup = window.open('about:blank', 'buy67_checkout', 'width=500,height=700');
-
             const res = await fetch('/api/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -73,25 +72,9 @@ export function BuyButton({ product }: BuyButtonProps) {
 
             const data = await res.json();
 
-            if (data.success && data.data.checkout_url) {
-                if (popup) {
-                    popup.location.href = data.data.checkout_url;
-
-                    // Listen for Success from BaseUPI popup
-                    const paymentListener = (e: MessageEvent) => {
-                        if (e.data?.type === 'baseupi:success' || e.data === 'baseupi:success') {
-                            popup.close();
-                            window.removeEventListener('message', paymentListener);
-                            window.location.href = `/p/thank-you?order=${data.data.merchant_order_id}`;
-                        }
-                    };
-                    window.addEventListener('message', paymentListener);
-
-                } else {
-                    window.location.href = data.data.checkout_url;
-                }
+            if (data.success && data.data.public_order_id) {
+                setCheckoutOrderId(data.data.public_order_id);
             } else {
-                popup?.close();
                 setError(data.error || 'Failed to create order');
             }
         } catch {
@@ -99,6 +82,11 @@ export function BuyButton({ product }: BuyButtonProps) {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePaymentSuccess = (order: any) => {
+        setCheckoutOrderId(null);
+        window.location.href = `/p/thank-you?order=${order.merchant_order_id || order.id}`;
     };
 
     const discountedPrice = discount
@@ -150,14 +138,31 @@ export function BuyButton({ product }: BuyButtonProps) {
                 <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>
             )}
 
-            <Button
-                onClick={handleBuyNow}
-                loading={loading}
-                size="lg"
-                className="w-full"
-            >
-                Buy Now — {formatPrice(discountedPrice)}
-            </Button>
+            {checkoutOrderId ? (
+                <div className="pt-2">
+                    <BaseUPIElements 
+                        orderId={checkoutOrderId}
+                        onSuccess={handlePaymentSuccess}
+                        onError={(err) => setError(err.message || 'Payment failed')}
+                    />
+                    <Button 
+                        variant="ghost" 
+                        className="w-full mt-4 text-xs text-[hsl(var(--muted-foreground))]"
+                        onClick={() => setCheckoutOrderId(null)}
+                    >
+                        ← Change Email / Coupon
+                    </Button>
+                </div>
+            ) : (
+                <Button
+                    onClick={handleBuyNow}
+                    loading={loading}
+                    size="lg"
+                    className="w-full"
+                >
+                    Buy Now — {formatPrice(discountedPrice)}
+                </Button>
+            )}
 
             <Button
                 variant="outline"
