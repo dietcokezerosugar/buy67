@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useCartStore } from '@/store/cart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { BaseUPIElements } from '@/components/checkout/BaseUPIElements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { formatPrice } from '@/lib/utils';
 import Link from 'next/link';
@@ -16,6 +17,7 @@ export default function CartPage() {
     const [couponApplied, setCouponApplied] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [checkoutOrderId, setCheckoutOrderId] = useState<string | null>(null);
 
     const totalPaise = getTotalPaise();
     const discountedTotal = discount
@@ -64,8 +66,6 @@ export default function CartPage() {
         setError('');
 
         try {
-            const popup = window.open('about:blank', 'buy67_checkout', 'width=500,height=700');
-
             const res = await fetch('/api/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -81,26 +81,9 @@ export default function CartPage() {
 
             const data = await res.json();
 
-            if (data.success && data.data.checkout_url) {
-                if (popup) {
-                    popup.location.href = data.data.checkout_url;
-
-                    // Listen for Success from BaseUPI popup
-                    const paymentListener = (e: MessageEvent) => {
-                        if (e.data?.type === 'baseupi:success' || e.data === 'baseupi:success') {
-                            popup.close();
-                            window.removeEventListener('message', paymentListener);
-                            window.location.href = `/p/thank-you?order=${data.data.merchant_order_id}`;
-                        }
-                    };
-                    window.addEventListener('message', paymentListener);
-
-                } else {
-                    window.location.href = data.data.checkout_url;
-                }
-                clearCart();
+            if (data.success && data.data.public_order_id) {
+                setCheckoutOrderId(data.data.public_order_id);
             } else {
-                popup?.close();
                 setError(data.error || 'Failed to create order');
             }
         } catch {
@@ -108,6 +91,12 @@ export default function CartPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePaymentSuccess = (order: any) => {
+        setCheckoutOrderId(null);
+        clearCart();
+        window.location.href = `/p/thank-you?order=${order.merchant_order_id || order.id}`;
     };
 
     return (
@@ -276,14 +265,31 @@ export default function CartPage() {
                                         <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>
                                     )}
 
-                                    <Button
-                                        onClick={handleCheckout}
-                                        loading={loading}
-                                        size="lg"
-                                        className="w-full"
-                                    >
-                                        Checkout — {formatPrice(discountedTotal)}
-                                    </Button>
+                                    {checkoutOrderId ? (
+                                        <div className="pt-4">
+                                            <BaseUPIElements 
+                                                orderId={checkoutOrderId}
+                                                onSuccess={handlePaymentSuccess}
+                                                onError={(err) => setError(err.message || 'Payment failed')}
+                                            />
+                                            <Button 
+                                                variant="ghost" 
+                                                className="w-full mt-4 text-xs text-[hsl(var(--muted-foreground))]"
+                                                onClick={() => setCheckoutOrderId(null)}
+                                            >
+                                                ← Back to Order Summary
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            onClick={handleCheckout}
+                                            loading={loading}
+                                            size="lg"
+                                            className="w-full"
+                                        >
+                                            Checkout — {formatPrice(discountedTotal)}
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
                         </div>

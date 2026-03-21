@@ -188,6 +188,7 @@ export async function POST(request: Request) {
             success: true,
             data: {
                 merchant_order_id: merchantOrderId,
+                public_order_id: baseupiResponse.data.public_order_id,
                 checkout_url: baseupiResponse.data.checkout_url,
                 amount_paise: totalPaise,
                 discount_percent: discountPercent,
