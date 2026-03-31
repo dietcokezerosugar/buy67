@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BaseUPICheckout } from '@snc0x/baseupi-react';
+import { BaseUPINativeCheckout } from './BaseUPINativeCheckout';
 import type { Product } from '@/types';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/utils';
@@ -151,28 +151,20 @@ export function BuyButton({ product }: BuyButtonProps) {
             )}
 
             <div className="pt-2">
-                <BaseUPICheckout
+                <BaseUPINativeCheckout
                     orderId={checkoutOrderId || ''}
                     open={!!checkoutOrderId}
-                    onOpenChange={(open) => !open && setCheckoutOrderId(null)}
+                    onOpenChange={(open: boolean) => !open && setCheckoutOrderId(null)}
                     onSuccess={handlePaymentSuccess}
-                    appearance={{
-                        variables: {
-                            colorPrimary: '#6366f1',
-                            borderRadius: '20px',
-                            fontFamily: "'Inter', sans-serif"
-                        }
-                    }}
+                />
+                <Button
+                    onClick={handleBuyNow}
+                    disabled={loading}
+                    size="lg"
+                    className="w-full h-14 bg-[hsl(var(--primary))] hover:brightness-110 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all uppercase tracking-tight"
                 >
-                    <Button
-                        onClick={handleBuyNow}
-                        disabled={loading}
-                        size="lg"
-                        className="w-full h-14 bg-[hsl(var(--primary))] hover:brightness-110 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all uppercase tracking-tight"
-                    >
-                        {loading ? 'Starting Secure Flow...' : `Buy Now — ${formatPrice(discountedPrice)}`}
-                    </Button>
-                </BaseUPICheckout>
+                    {loading ? 'Starting Secure Flow...' : `Buy Now — ${formatPrice(discountedPrice)}`}
+                </Button>
             </div>
 
             <Button
