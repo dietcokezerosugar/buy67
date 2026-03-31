@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@snc0x/baseupi": "^1.4.0",
-    "@snc0x/baseupi-react": "^1.4.0",
+    "@snc0x/baseupi-react": "^1.5.1",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.98.0",
     "framer-motion": "^12.38.0",
