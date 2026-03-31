@@ -1,3 +1,4 @@
+/*
 import type { BaseUPICreateOrderResponse } from '@/types';
 
 const BASEUPI_URL = process.env.BASEUPI_URL || 'https://baseupi.app';
@@ -49,13 +50,8 @@ export async function createBaseUPIOrder(
 
     const data = await response.json();
 
-    // Aggressive parsing to handle different API response formats
-    // format 1: { success: true, data: { public_order_id: '...' } }
-    // format 2: { success: true, order: { public_order_id: '...' } }
-    // format 3: { public_order_id: '...' } (direct object)
     const order = data.data || data.order || data;
 
-    // Support both 'public_order_id' and 'order_id' (used in some SDK versions)
     const publicId = order.public_order_id || order.order_id || order.id;
 
     if (!publicId) {
@@ -99,3 +95,4 @@ export function verifyWebhookSignature(
         return false;
     }
 }
+*/

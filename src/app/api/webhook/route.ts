@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { BaseUPI } from 'baseupi';
+import { BaseUPI } from '@snc0x/baseupi';
 
 export async function POST(request: Request) {
     try {
@@ -15,14 +15,18 @@ export async function POST(request: Request) {
 
         const baseupi = new BaseUPI(process.env.BASEUPI_API_KEY || '');
         
-        // Verify HMAC-SHA256 signature using the SDK
-        const isValid = baseupi.webhooks.verifySignature(rawBody, signature, webhookSecret);
-        if (!isValid) {
-            console.error('Invalid webhook signature');
+        // Verify HMAC-SHA256 signature and parse event using the scoped SDK
+        let event;
+        try {
+            event = baseupi.webhooks.constructEvent({
+                payload: rawBody,
+                signature: signature,
+                secret: webhookSecret
+            });
+        } catch (err) {
+            console.error('Invalid webhook signature or payload:', err);
             return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
         }
-
-        const event = baseupi.webhooks.constructEvent(rawBody);
 
         if (event.event !== 'payment.completed') {
             return NextResponse.json({ success: true, message: 'Event ignored' });

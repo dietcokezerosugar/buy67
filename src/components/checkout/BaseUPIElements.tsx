@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BaseUPIPaymentElement } from 'baseupi-react';
+import { BaseUPIPaymentElement } from '@snc0x/baseupi-react';
 
 interface BaseUPIElementsProps {
     orderId: string;

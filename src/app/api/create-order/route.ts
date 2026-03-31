@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createBaseUPIOrder } from '@/lib/baseupi';
+
 import { createOrderSchema } from '@/lib/validations';
 import { generateMerchantOrderId, getBaseUrl } from '@/lib/utils';
 import { withRateLimit } from '@/lib/rate-limit';
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
         // Create BaseUPI order
         let baseupiResponse;
         try {
-            const { BaseUPI } = await import('baseupi');
+            const { BaseUPI } = await import('@snc0x/baseupi');
             const baseupi = new BaseUPI(process.env.BASEUPI_API_KEY!);
             
             const order = await baseupi.orders.create({
