@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { BaseUPIElements } from '@/components/checkout/BaseUPIElements';
+import { BaseUPICheckout } from '@snc0x/baseupi-react';
 import type { Product } from '@/types';
 import { useCartStore } from '@/store/cart';
 import { formatPrice } from '@/lib/utils';
@@ -52,7 +52,7 @@ export function BuyButton({ product }: BuyButtonProps) {
 
     const handleBuyNow = async () => {
         if (!email.trim()) {
-            setError('Please enter your email');
+            setError('Please enter your email to continue');
             return;
         }
 
@@ -78,15 +78,15 @@ export function BuyButton({ product }: BuyButtonProps) {
                 setError(data.error || 'Failed to create order');
             }
         } catch {
-            setError('Something went wrong');
+            setError('Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
     };
 
-    const handlePaymentSuccess = (order: any) => {
+    const handlePaymentSuccess = () => {
         setCheckoutOrderId(null);
-        window.location.href = `/p/thank-you?order=${order.merchant_order_id || order.id}`;
+        window.location.href = `/p/thank-you?order=${product.slug || 'success'}`;
     };
 
     const discountedPrice = discount
@@ -94,84 +94,99 @@ export function BuyButton({ product }: BuyButtonProps) {
         : product.price_paise;
 
     return (
-        <div className="space-y-4">
-            <Input
-                placeholder="your@email.com"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-            />
-
-            <div className="flex gap-2">
+        <div className="space-y-6">
+            <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))] px-1">
+                    Receipt Email
+                </label>
                 <Input
-                    placeholder="Coupon code"
-                    value={coupon}
-                    onChange={(e) => {
-                        setCoupon(e.target.value);
-                        setCouponApplied(false);
-                        setDiscount(0);
-                    }}
+                    placeholder="Enter your email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12 bg-[hsl(var(--background))] border-[hsl(var(--border))] focus:ring-primary/20"
+                    required
                 />
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleValidateCoupon}
-                    loading={loading}
-                    className="shrink-0"
-                >
-                    Apply
-                </Button>
+            </div>
+
+            <div className="space-y-3">
+                <label className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))] px-1">
+                    Have a coupon?
+                </label>
+                <div className="flex gap-2">
+                    <Input
+                        placeholder="CODE10"
+                        value={coupon}
+                        onChange={(e) => {
+                            setCoupon(e.target.value);
+                            setCouponApplied(false);
+                            setDiscount(0);
+                        }}
+                        className="h-12 bg-[hsl(var(--background))] border-[hsl(var(--border))]"
+                    />
+                    <Button
+                        variant="outline"
+                        onClick={handleValidateCoupon}
+                        disabled={loading || !coupon.trim()}
+                        className="h-12 px-6 font-bold border-[hsl(var(--border))] hover:bg-[hsl(var(--accent))] shrink-0"
+                    >
+                        Apply
+                    </Button>
+                </div>
             </div>
 
             {couponApplied && (
-                <div className="text-sm text-emerald-500 flex items-center gap-1">
-                    ✓ {discount}% off applied!
-                    <span className="text-[hsl(var(--muted-foreground))] line-through ml-2">
-                        {formatPrice(product.price_paise)}
+                <div className="p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-sm text-emerald-500 flex items-center justify-between">
+                    <span className="flex items-center gap-2 font-medium">
+                        ✓ {discount}% discount applied
                     </span>
-                    <span className="font-bold ml-1">{formatPrice(discountedPrice)}</span>
+                    <span className="font-bold">{formatPrice(discountedPrice)}</span>
                 </div>
             )}
 
             {error && (
-                <p className="text-sm text-[hsl(var(--destructive))]">{error}</p>
+                <div className="p-3 rounded-lg bg-[hsl(var(--destructive)/0.1)] border border-[hsl(var(--destructive)/0.2)] text-xs text-[hsl(var(--destructive))] font-medium">
+                    {error}
+                </div>
             )}
 
-            {checkoutOrderId ? (
-                <div className="pt-2">
-                    <BaseUPIElements 
-                        orderId={checkoutOrderId}
-                        onSuccess={handlePaymentSuccess}
-                        onError={(err) => setError(err.message || 'Payment failed')}
-                    />
-                    <Button 
-                        variant="ghost" 
-                        className="w-full mt-4 text-xs text-[hsl(var(--muted-foreground))]"
-                        onClick={() => setCheckoutOrderId(null)}
-                    >
-                        ← Change Email / Coupon
-                    </Button>
-                </div>
-            ) : (
-                <Button
-                    onClick={handleBuyNow}
-                    loading={loading}
-                    size="lg"
-                    className="w-full"
+            <div className="pt-2">
+                <BaseUPICheckout
+                    orderId={checkoutOrderId || ''}
+                    open={!!checkoutOrderId}
+                    onOpenChange={(open) => !open && setCheckoutOrderId(null)}
+                    onSuccess={handlePaymentSuccess}
+                    appearance={{
+                        variables: {
+                            colorPrimary: '#6366f1',
+                            borderRadius: '20px',
+                            fontFamily: "'Inter', sans-serif"
+                        }
+                    }}
                 >
-                    Buy Now — {formatPrice(discountedPrice)}
-                </Button>
-            )}
+                    <Button
+                        onClick={handleBuyNow}
+                        disabled={loading}
+                        size="lg"
+                        className="w-full h-14 bg-[hsl(var(--primary))] hover:brightness-110 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all uppercase tracking-tight"
+                    >
+                        {loading ? 'Starting Secure Flow...' : `Buy Now — ${formatPrice(discountedPrice)}`}
+                    </Button>
+                </BaseUPICheckout>
+            </div>
 
             <Button
-                variant="outline"
+                variant="ghost"
                 size="lg"
-                className="w-full"
+                className="w-full text-[hsl(var(--muted-foreground))] hover:text-white transition-colors text-sm font-bold uppercase tracking-widest opacity-60"
                 onClick={() => addItem(product)}
             >
                 Add to Cart
             </Button>
+
+            <p className="text-[10px] text-center text-[hsl(var(--muted-foreground))] uppercase tracking-[0.2em] font-black opacity-30 mt-4">
+                Powered by @snc0x BaseUPI
+            </p>
         </div>
     );
 }
