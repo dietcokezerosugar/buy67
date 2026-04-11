@@ -63,10 +63,10 @@ export function BaseUPINativeCheckout({
                 <Dialog.Content asChild>
                     <div className="fixed inset-0 z-[101] flex items-center justify-center p-4">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.98, y: 10 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-[420px] overflow-hidden rounded-[24px] border border-white/10 glass bg-[hsl(var(--card))] shadow-2xl"
+                            exit={{ opacity: 0, scale: 0.98, y: 10 }}
+                            className="relative w-full max-w-[400px] overflow-hidden rounded-[32px] glass shadow-2xl"
                         >
                             {/* Close Button */}
                             <Dialog.Close asChild>
@@ -114,22 +114,15 @@ export function BaseUPINativeCheckout({
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
-function LoadingState() {
-    return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center py-12 text-center"
+            className="flex flex-col items-center justify-center py-16 text-center"
         >
-            <div className="relative">
-                <Loader2 className="h-12 w-12 animate-spin text-cyan-500" />
-                <div className="absolute inset-0 h-12 w-12 animate-pulse blur-xl bg-cyan-500/20" />
-            </div>
-            <p className="mt-6 text-sm font-medium text-white/60">Fetching secure checkout session...</p>
+            <Loader2 className="h-8 w-8 animate-spin text-white/20" />
+            <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Secure Session</p>
         </motion.div>
-    );
-}
 
 function ErrorState({ message }: { message: string }) {
     return (
@@ -154,23 +147,14 @@ function SuccessState({ message, amount }: { message: string; amount: string }) 
             animate={{ opacity: 1, y: 0 }}
             className="flex flex-col items-center justify-center py-8 text-center"
         >
-            <div className="relative mb-6">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/10 text-emerald-500">
-                    <CheckCircle2 className="h-10 w-10" />
-                </div>
-                <motion.div
-                    initial={{ scale: 0.8, opacity: 0 }}
-                    animate={{ scale: 1.2, opacity: 1 }}
-                    transition={{ repeat: Infinity, duration: 2, repeatType: "reverse" }}
-                    className="absolute inset-0 rounded-full border-2 border-emerald-500/20"
-                />
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white text-black mb-8">
+                <CheckCircle2 className="h-8 w-8" />
             </div>
-            <h3 className="text-2xl font-black text-white">{amount}</h3>
-            <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                <Sparkles className="h-3 w-3" />
-                Payment Verified
+            <h3 className="text-4xl font-bold font-outfit text-white tracking-tight">{amount}</h3>
+            <div className="mt-3 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-500">
+                Payment Success
             </div>
-            <p className="mt-6 text-sm font-medium text-white/60">{message}</p>
+            <p className="mt-8 text-sm font-medium text-white/40 max-w-[240px] leading-relaxed">{message}</p>
         </motion.div>
     );
 }
@@ -196,22 +180,17 @@ function CheckoutUI({ amount, merchant, qr, timer, status, openApp, branding }: 
                 <p className="mt-1 text-sm font-medium text-white/40">to {merchant}</p>
             </div>
 
-            {/* QR Section */}
-            <div className="relative group mx-auto w-fit">
-                <div className="absolute -inset-4 rounded-[32px] bg-cyan-500/5 blur-2xl transition-all group-hover:bg-cyan-500/10" />
-                <div className="relative rounded-[24px] border border-white/5 bg-white/[0.03] p-4 shadow-sm group-hover:border-white/10 transition-colors">
+            <div className="mx-auto w-fit">
+                <div className="relative rounded-[32px] border border-white/5 bg-white/[0.02] p-6 shadow-2xl transition-all duration-700">
+                    <img src={qr} alt="UPI QR Code" className="h-44 w-44 rounded-xl opacity-90 brightness-110 grayscale" />
                     {status === 'pending' && (
-                        <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[24px] bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-[2px]">
-                            <div className="flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full border border-white/10">
-                                <span className="relative flex h-2 w-2">
-                                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                                    <span className="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                                </span>
-                                <span className="text-[10px] font-black uppercase tracking-widest text-white">Live Monitoring</span>
-                            </div>
+                        <div className="absolute top-3 right-3">
+                             <span className="relative flex h-1.5 w-1.5">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-40"></span>
+                                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white/60"></span>
+                            </span>
                         </div>
                     )}
-                    <img src={qr} alt="UPI QR Code" className="h-48 w-48 rounded-xl invert-0 brightness-110" />
                 </div>
             </div>
 

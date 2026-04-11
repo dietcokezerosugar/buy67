@@ -34,16 +34,28 @@ export async function GET(
         // Generate signed URLs for all products in the order
         const downloads: { title: string; url: string }[] = [];
 
+        console.log(`[DownloadAPI] Generating links for order ${order.id}, items:`, order.order_items?.length);
+
         for (const item of order.order_items || []) {
-            const product = item.products as unknown as { file_path: string; title: string } | null;
-            if (!product?.file_path) continue;
+            // Handle cases where item.products might be an array or a single object
+            let productData = item.products;
+            if (Array.isArray(productData)) {
+                productData = productData[0];
+            }
+
+            const product = productData as unknown as { file_path: string; title: string } | null;
+            
+            if (!product || !product.file_path) {
+                console.warn(`[DownloadAPI] Missing product data for item in order ${order.id}`);
+                continue;
+            }
 
             const { data: signedUrl, error: signError } = await supabase.storage
                 .from('products')
-                .createSignedUrl(product.file_path, 60); // 60 seconds expiry
+                .createSignedUrl(product.file_path, 3600); // Increase to 1 hour for better UX
 
             if (signError || !signedUrl) {
-                console.error('Failed to create signed URL:', signError);
+                console.error(`[DownloadAPI] Failed to create signed URL for ${product.file_path}:`, signError);
                 continue;
             }
 
@@ -54,8 +66,9 @@ export async function GET(
         }
 
         if (downloads.length === 0) {
+            console.error(`[DownloadAPI] No downloadable files found for order ${order.id}`);
             return NextResponse.json(
-                { success: false, error: 'No downloadable files found' },
+                { success: false, error: 'Downloadable files could not be retrieved. Please contact support.' },
                 { status: 404 }
             );
         }

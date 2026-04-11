@@ -18,25 +18,25 @@ export function Button({
     ...props
 }: ButtonProps) {
     const baseStyles =
-        'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[hsl(var(--ring))] disabled:opacity-50 disabled:pointer-events-none active:scale-[0.98]';
+        'inline-flex items-center justify-center font-bold tracking-tight rounded-xl transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-white/20 disabled:opacity-50 disabled:pointer-events-none active:scale-[0.97]';
 
     const variants = {
         primary:
-            'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 shadow-sm',
+            'bg-white text-black hover:bg-white/90 shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]',
         secondary:
-            'bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))] hover:bg-[hsl(var(--secondary))]/80',
+            'bg-white/5 border border-white/5 text-white hover:bg-white/10',
         outline:
-            'border border-[hsl(var(--border))] bg-transparent hover:bg-[hsl(var(--accent))] text-[hsl(var(--foreground))]',
+            'border border-white/10 bg-transparent hover:bg-white/5 text-white',
         ghost:
-            'hover:bg-[hsl(var(--accent))] text-[hsl(var(--foreground))]',
+            'hover:bg-white/5 text-white/70 hover:text-white',
         destructive:
-            'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:opacity-90',
+            'bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500/20',
     };
 
     const sizes = {
-        sm: 'h-8 px-3 text-xs gap-1.5',
-        md: 'h-10 px-4 text-sm gap-2',
-        lg: 'h-12 px-6 text-base gap-2.5',
+        sm: 'h-9 px-4 text-xs gap-2',
+        md: 'h-11 px-6 text-sm gap-2',
+        lg: 'h-14 px-8 text-base gap-3',
     };
 
     return (

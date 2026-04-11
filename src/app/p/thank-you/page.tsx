@@ -21,8 +21,13 @@ function ThankYouContent() {
         }
 
         let cancelled = false;
+        let attempts = 0;
+        const maxAttempts = 20; // ~60 seconds of polling
 
         const fetchDownloads = async () => {
+            if (cancelled) return;
+            attempts++;
+
             try {
                 const res = await fetch(`/api/download/${merchantOrderId}`);
                 const data = await res.json();
@@ -31,18 +36,25 @@ function ThankYouContent() {
                     if (data.success) {
                         setDownloads(data.data.downloads);
                         setLoading(false);
+                        setError('');
                     } else {
-                        setError(data.error || 'Downloads not available yet');
+                        // If it's just waiting for payment, don't stop loading yet unless we've tried too many times
+                        if (res.status === 403 && attempts < maxAttempts) {
+                            setError('Waiting for payment verification...');
+                        } else {
+                            setError(data.error || 'Downloads not available yet');
+                            setLoading(false);
+                        }
                     }
                 }
             } catch {
                 if (!cancelled) {
-                    setError('Failed to fetch downloads');
+                    setError('Unable to reach server. Retrying...');
+                    if (attempts >= maxAttempts) setLoading(false);
                 }
             }
         };
 
-        // Poll for a few seconds in case webhook hasn't arrived yet
         const interval = setInterval(fetchDownloads, 3000);
         fetchDownloads();
 

@@ -2,33 +2,42 @@ import Link from 'next/link';
 import { LoginButton } from '@/components/auth-buttons';
 import { createClient } from '@/lib/supabase/server';
 import type { User } from '@supabase/supabase-js';
+import { ShieldCheck, Zap, Globe, Lock, ArrowRight, Sparkles } from 'lucide-react';
 
 export default async function HomePage() {
   let user: User | null = null;
-
   try {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch {
-    // Supabase not configured yet — show unauthenticated state
+    // Unauthenticated state
   }
 
   return (
-    <div className="min-h-screen bg-[hsl(var(--background))]">
+    <div className="min-h-screen bg-black text-white selection:bg-white/10 overflow-x-hidden">
+      {/* Dynamic Background Glows */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-20">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-white/10 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[20%] right-[-5%] w-[30%] h-[30%] bg-white/5 blur-[100px] rounded-full" />
+      </div>
+
       {/* Navigation */}
-      <nav className="border-b border-[hsl(var(--border))] glass sticky top-0 z-40">
-        <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-xl font-bold tracking-tight">
+      <nav className="fixed top-0 inset-x-0 z-50 glass border-b border-white/5 h-20">
+        <div className="mx-auto max-w-7xl px-8 h-full flex items-center justify-between">
+          <Link href="/" className="text-2xl font-bold font-outfit tracking-tighter flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center text-sm font-black">67</div>
             BUY67
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-8">
+            <Link href="#features" className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 hover:text-white transition-colors hidden sm:block">Features</Link>
+            <div className="h-4 w-[1px] bg-white/10 hidden sm:block" />
             {user ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center h-10 px-4 text-sm font-medium rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-opacity"
+                className="text-[10px] font-bold uppercase tracking-[0.2em] bg-white text-black px-6 py-3 rounded-full hover:bg-white/90 transition-all active:scale-95"
               >
-                Dashboard →
+                Go to Dashboard
               </Link>
             ) : (
               <LoginButton />
@@ -37,90 +46,99 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(var(--background))] to-[hsl(var(--muted))]" />
-        <div className="relative mx-auto max-w-6xl px-6 py-32 lg:py-44 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[hsl(var(--border))] px-4 py-1.5 text-xs font-medium text-[hsl(var(--muted-foreground))] mb-8 animate-fade-in">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse-subtle" />
-            Zero commission. 100% yours.
+      {/* Hero Section */}
+      <section className="relative pt-44 pb-32 lg:pt-64 lg:pb-48">
+        <div className="mx-auto max-w-7xl px-8 text-center flex flex-col items-center">
+          <div className="inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-white/60 mb-12 animate-reveal">
+            <Sparkles className="w-3.5 h-3.5 text-white/40" />
+            Phase Zero • Now in Public Beta
           </div>
-          <h1 className="text-5xl lg:text-7xl font-bold tracking-tight mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-            Sell digital products.
-            <br />
-            <span className="text-[hsl(var(--muted-foreground))]">
-              Get paid via UPI.
-            </span>
+          
+          <h1 className="text-6xl lg:text-8xl font-bold font-outfit tracking-tight mb-8 leading-[0.9] animate-reveal [animation-delay:0.1s]">
+            Sell digital.<br />
+            <span className="text-white/20">Get paid instantly.</span>
           </h1>
-          <p className="text-lg lg:text-xl text-[hsl(var(--muted-foreground))] max-w-2xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-            The simplest way for Indian creators to sell ebooks, templates, design kits,
-            presets, and more. Direct UPI payments. No middleman.
+          
+          <p className="text-lg lg:text-xl text-white/40 max-w-2xl font-medium leading-relaxed mb-12 animate-reveal [animation-delay:0.2s]">
+            The minimalist commerce engine for high-end creators. 
+            Accept UPI payments directly. Zero commission. Zero friction.
           </p>
-          <div className="flex items-center justify-center gap-4 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 animate-reveal [animation-delay:0.3s]">
             {user ? (
               <Link
                 href="/dashboard"
-                className="inline-flex items-center h-12 px-8 text-base font-medium rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-all shadow-lg"
+                className="group inline-flex items-center h-14 px-10 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full bg-white text-black hover:bg-white/90 transition-all active:scale-95"
               >
-                Go to Dashboard →
+                Open Dashboard <ArrowRight className="ml-2 w-3 h-3 group-hover:translate-x-1 transition-transform" />
               </Link>
             ) : (
               <LoginButton />
             )}
+            <Link 
+              href="/custom-checkout-demo"
+              className="h-14 px-10 inline-flex items-center text-[10px] font-bold uppercase tracking-[0.2em] rounded-full border border-white/5 hover:bg-white/5 transition-all"
+            >
+              View Demo
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">
-            Everything you need to sell online
-          </h2>
-          <p className="text-[hsl(var(--muted-foreground))] text-lg max-w-xl mx-auto">
-            No complex setup. No monthly fees. Just create, upload, and start earning.
-          </p>
+      {/* Features Grid */}
+      <section id="features" className="mx-auto max-w-7xl px-8 py-32 border-t border-white/5">
+        <div className="flex flex-col lg:flex-row items-end justify-between gap-8 mb-24">
+          <div className="space-y-4 max-w-xl">
+             <h2 className="text-4xl lg:text-5xl font-bold font-outfit tracking-tight">Built for speed.</h2>
+             <p className="text-lg text-white/40 font-medium">Simple enough to set up in two minutes, powerful enough to scale with your audience.</p>
+          </div>
+          <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 pb-4">
+            Platform Capabilities
+          </div>
         </div>
-        <div className="grid md:grid-cols-3 gap-6">
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
-              icon: '💰',
-              title: 'Zero Commission',
-              desc: 'Payments go directly to your UPI. We never touch your money.',
-            },
-            {
-              icon: '⚡',
+              icon: <Zap className="w-5 h-5" />,
               title: 'Instant Setup',
-              desc: 'Create your product page in under 2 minutes. Start selling immediately.',
+              desc: 'Upload your file, set a price, and get a link. Sell ebooks, presets, or templates in seconds.',
             },
             {
-              icon: '🔒',
-              title: 'Secure Downloads',
-              desc: 'Files are protected with signed URLs. Only paying customers get access.',
+              icon: <Globe className="w-5 h-5" />,
+              title: 'UPI Everywhere',
+              desc: 'Optimized for the Indian market. Full support for GPay, PhonePe, Paytm, and all UPI apps.',
             },
             {
-              icon: '🎫',
-              title: 'Coupon System',
-              desc: 'Create discount coupons to boost your sales and reward loyal customers.',
+              icon: <ShieldCheck className="w-5 h-5" />,
+              title: 'Zero Commission',
+              desc: 'Every paise goes directly to your bank account via BaseUPI. We never touch your revenue.',
             },
             {
-              icon: '📊',
-              title: 'Analytics Dashboard',
-              desc: 'Track your revenue, orders, and growth from a clean dashboard.',
+              icon: <Lock className="w-5 h-5" />,
+              title: 'Secure Delivery',
+              desc: 'Automated fulfillment with signed download URLs that expire for maximum file security.',
             },
             {
-              icon: '🛒',
-              title: 'Multi-Product Cart',
-              desc: 'Customers can buy multiple products at once with a single checkout.',
+              icon: <Sparkles className="w-5 h-5" />,
+              title: 'SDK Integrated',
+              desc: 'Powering custom checkout flows with our headless React hooks and world-class API.',
             },
-          ].map((feature) => (
+            {
+              icon: <ArrowRight className="w-5 h-5" />,
+              title: 'Clean Analytics',
+              desc: 'Monitor your growth without the noise. High-fidelity transaction reports and customer data.',
+            },
+          ].map((feature, i) => (
             <div
               key={feature.title}
-              className="group rounded-xl border border-[hsl(var(--border))] p-6 transition-all duration-300 hover:border-[hsl(var(--foreground))]/20 hover:shadow-lg hover:-translate-y-1"
+              className="group p-10 rounded-[2.5rem] border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all duration-700"
             >
-              <span className="text-3xl mb-4 block">{feature.icon}</span>
-              <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-              <p className="text-sm text-[hsl(var(--muted-foreground))] leading-relaxed">
+              <div className="w-12 h-12 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center text-white/60 mb-8 group-hover:scale-110 group-hover:bg-white group-hover:text-black transition-all">
+                {feature.icon}
+              </div>
+              <h3 className="text-xl font-bold font-outfit mb-4">{feature.title}</h3>
+              <p className="text-sm text-white/40 leading-relaxed font-medium">
                 {feature.desc}
               </p>
             </div>
@@ -128,35 +146,43 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="mx-auto max-w-6xl px-6 py-24">
-        <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-12 lg:p-16 text-center">
-          <h2 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">
-            Start selling today
+      {/* CTA Section */}
+      <section className="mx-auto max-w-7xl px-8 py-32">
+        <div className="rounded-[4rem] border border-white/10 bg-white/[0.02] p-16 lg:p-32 text-center relative overflow-hidden group">
+          <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 blur-3xl" />
+          <h2 className="text-4xl lg:text-7xl font-bold font-outfit tracking-tight mb-8 relative z-10 transition-transform duration-700 group-hover:scale-105">
+            Start selling.<br />
+            <span className="text-white/20">Own your audience.</span>
           </h2>
-          <p className="text-[hsl(var(--muted-foreground))] text-lg mb-8 max-w-lg mx-auto">
-            Join thousands of Indian creators already earning with BUY67.
+          <p className="text-white/40 text-lg mb-12 max-w-lg mx-auto font-medium relative z-10">
+            Join the new wave of Indian digital creators.
           </p>
-          {!user && <LoginButton />}
-          {user && (
-            <Link
-              href="/dashboard"
-              className="inline-flex items-center h-12 px-8 text-base font-medium rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:opacity-90 transition-all"
-            >
-              Open Dashboard
-            </Link>
-          )}
+          <div className="relative z-10">
+            {!user && <LoginButton />}
+            {user && (
+              <Link
+                href="/dashboard"
+                className="inline-flex items-center h-14 px-10 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full bg-white text-black hover:bg-white/90 transition-all active:scale-95"
+              >
+                Go to Dashboard
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-[hsl(var(--border))] py-8">
-        <div className="mx-auto max-w-6xl px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-sm text-[hsl(var(--muted-foreground))]">
-            © 2026 BUY67. Built for Indian creators.
-          </p>
-          <div className="flex items-center gap-6 text-sm text-[hsl(var(--muted-foreground))]">
-            <span>UPI Payments via BaseUPI</span>
+      <footer className="py-16 border-t border-white/5">
+        <div className="mx-auto max-w-7xl px-8 flex flex-col sm:flex-row items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+             <Link href="/" className="text-xl font-bold font-outfit tracking-tighter">BUY67</Link>
+             <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20">© 2026</span>
+          </div>
+          <div className="flex items-center gap-8 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">
+            <span className="flex items-center gap-2">
+              <ShieldCheck className="w-3 h-3" /> Secure by BaseUPI
+            </span>
+            <Link href="/dashboard" className="hover:text-white transition-colors">Seller Portal</Link>
           </div>
         </div>
       </footer>
