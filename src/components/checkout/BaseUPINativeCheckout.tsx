@@ -114,6 +114,8 @@ export function BaseUPINativeCheckout({
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
 
+function LoadingState() {
+    return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -123,6 +125,8 @@ export function BaseUPINativeCheckout({
             <Loader2 className="h-8 w-8 animate-spin text-white/20" />
             <p className="mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/40">Secure Session</p>
         </motion.div>
+    );
+}
 
 function ErrorState({ message }: { message: string }) {
     return (
