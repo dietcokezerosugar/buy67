@@ -71,23 +71,6 @@ export default async function ProductPage({ params }: Props) {
                             <h1 className="text-3xl lg:text-4xl font-bold tracking-tight">
                                 {product.title}
                             </h1>
-                            {creator && (
-                                <div className="flex items-center gap-3 mt-4">
-                                    {creator.avatar_url && (
-                                        <img
-                                            src={creator.avatar_url}
-                                            alt={creator.full_name}
-                                            className="h-10 w-10 rounded-full border border-[hsl(var(--border))]"
-                                        />
-                                    )}
-                                <div>
-                                    <p className="text-sm font-medium">Aether</p>
-                                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                                        @aether_manuals
-                                    </p>
-                                </div>
-                                </div>
-                            )}
                         </div>
                         <div className="prose prose-invert max-w-none">
                             <p className="text-[hsl(var(--muted-foreground))] leading-relaxed whitespace-pre-wrap">
