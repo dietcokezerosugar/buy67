@@ -46,13 +46,13 @@ export async function GET(
             const product = productData as unknown as { file_path: string; title: string } | null;
             
             if (!product || !product.file_path) {
-                console.warn(`[DownloadAPI] Missing product data for item in order ${order.id}`);
+                console.warn(`[DownloadAPI] Missing product data for item in order ${order.id}`, item);
                 continue;
             }
 
             const { data: signedUrl, error: signError } = await supabase.storage
                 .from('products')
-                .createSignedUrl(product.file_path, 3600); // Increase to 1 hour for better UX
+                .createSignedUrl(product.file_path, 3600); // 1 hour expiry
 
             if (signError || !signedUrl) {
                 console.error(`[DownloadAPI] Failed to create signed URL for ${product.file_path}:`, signError);
@@ -60,7 +60,7 @@ export async function GET(
             }
 
             downloads.push({
-                title: product.title,
+                title: product.title || 'Product File',
                 url: signedUrl.signedUrl,
             });
         }
