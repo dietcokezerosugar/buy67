@@ -22,7 +22,8 @@ export async function POST(request: Request) {
             );
         }
 
-        const { items, buyer_email, coupon_code } = parsed.data;
+        const { items, buyer_phone, coupon_code } = parsed.data;
+        const buyer_email = `${buyer_phone.replace('+', '')}@whatsapp.buy67.com`;
 
         // Check env vars
         if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
