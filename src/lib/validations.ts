@@ -11,7 +11,7 @@ export const createOrderSchema = z.object({
         product_id: z.string().uuid('Invalid product ID'),
         quantity: z.number().int().min(1).max(10),
     })).min(1, 'Cart cannot be empty').max(20, 'Too many items'),
-    buyer_email: z.string().email('Invalid email address'),
+    buyer_phone: z.string().regex(/^\+91[6789]\d{9}$/, 'Invalid WhatsApp number. Must start with +91 followed by 10 digits.'),
     coupon_code: z.string().max(50).optional(),
 });
 

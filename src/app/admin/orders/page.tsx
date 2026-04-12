@@ -65,7 +65,7 @@ export default async function AdminOrdersPage() {
                                                 </div>
                                             ))}
                                         </td>
-                                        <td className="py-3 px-2">{order.buyer_email}</td>
+                                        <td className="py-3 px-2 text-indigo-400 font-medium">{order.buyer_phone || '-'}</td>
                                         <td className="py-3 px-2 font-medium">
                                             {formatPrice(order.amount_paise)}
                                         </td>

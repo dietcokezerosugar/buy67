@@ -24,6 +24,7 @@ export default async function OrdersPage() {
         id: string;
         merchant_order_id: string;
         buyer_email: string;
+        buyer_phone: string;
         amount_paise: number;
         status: string;
         created_at: string;
@@ -45,6 +46,7 @@ export default async function OrdersPage() {
           id,
           merchant_order_id,
           buyer_email,
+          buyer_phone,
           amount_paise,
           status,
           created_at
@@ -56,7 +58,15 @@ export default async function OrdersPage() {
         if (orderItems) {
             const orderMap = new Map<string, typeof orders[0]>();
             orderItems.forEach((item) => {
-                const order = item.orders as unknown as { id: string; merchant_order_id: string; buyer_email: string; amount_paise: number; status: string; created_at: string };
+                const order = item.orders as unknown as { 
+                    id: string; 
+                    merchant_order_id: string; 
+                    buyer_email: string; 
+                    buyer_phone: string;
+                    amount_paise: number; 
+                    status: string; 
+                    created_at: string 
+                };
                 if (!orderMap.has(order.id)) {
                     orderMap.set(order.id, { ...order, order_items: [] });
                 }
@@ -72,6 +82,20 @@ export default async function OrdersPage() {
         }
     }
 
+    // Customer aggregation logic
+    const customerStats = orders.reduce((acc, order) => {
+        if (order.status !== 'COMPLETED') return acc;
+        const phone = order.buyer_phone || 'Unknown';
+        if (!acc[phone]) {
+            acc[phone] = { phone, orders: 0, spent: 0 };
+        }
+        acc[phone].orders += 1;
+        acc[phone].spent += order.amount_paise;
+        return acc;
+    }, {} as Record<string, { phone: string; orders: number; spent: number }>);
+
+    const summarizedCustomers = Object.values(customerStats).sort((a, b) => b.orders - a.orders);
+
     return (
         <div className="space-y-6">
             <div>
@@ -79,6 +103,27 @@ export default async function OrdersPage() {
                 <p className="text-[hsl(var(--muted-foreground))] mt-1">
                     Track your product orders
                 </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 pb-6">
+                <Card className="bg-emerald-500/5 border-emerald-500/10 shadow-none">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">Total Customers</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-3xl font-bold">{summarizedCustomers.length}</p>
+                    </CardContent>
+                </Card>
+                <Card className="bg-indigo-500/5 border-indigo-500/10 shadow-none">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))]">Repeat Buyers</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-3xl font-bold">
+                            {summarizedCustomers.filter(c => c.orders > 1).length}
+                        </p>
+                    </CardContent>
+                </Card>
             </div>
 
             <Card>
@@ -102,7 +147,7 @@ export default async function OrdersPage() {
                                             Products
                                         </th>
                                         <th className="text-left py-3 px-2 font-medium text-[hsl(var(--muted-foreground))]">
-                                            Buyer
+                                            WhatsApp
                                         </th>
                                         <th className="text-left py-3 px-2 font-medium text-[hsl(var(--muted-foreground))]">
                                             Amount
@@ -131,7 +176,14 @@ export default async function OrdersPage() {
                                                     </div>
                                                 ))}
                                             </td>
-                                            <td className="py-3 px-2">{order.buyer_email}</td>
+                                            <td className="py-3 px-2 font-medium text-indigo-400">
+                                                {order.buyer_phone || '-'}
+                                                {summarizedCustomers.find(c => c.phone === order.buyer_phone && c.orders > 1) && (
+                                                    <span className="ml-2 text-[10px] bg-indigo-500/20 text-indigo-300 px-1.5 py-0.5 rounded cursor-help" title="Repeat Customer">
+                                                        ⭐️ {customerStats[order.buyer_phone].orders} orders
+                                                    </span>
+                                                )}
+                                            </td>
                                             <td className="py-3 px-2 font-medium">
                                                 {formatPrice(order.amount_paise)}
                                             </td>

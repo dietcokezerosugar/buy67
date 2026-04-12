@@ -106,28 +106,20 @@ function ThankYouContent() {
                 ) : (
                     <>
                         <div className="text-5xl">🎉</div>
-                        <h1 className="text-2xl font-bold">Thank you for your purchase!</h1>
+                        <h1 className="text-2xl font-bold">Order Received!</h1>
                         <p className="text-[hsl(var(--muted-foreground))]">
-                            Your download links are ready. Links expire in 60 seconds.
+                            Thank you for your purchase. Since this is a manual delivery, 
+                            we will contact you on your WhatsApp number shortly with the 
+                            **DLD Lab Manual**.
                         </p>
-                        <div className="space-y-3">
-                            {downloads.map((download, i) => (
-                                <a
-                                    key={i}
-                                    href={download.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 h-12 px-6 rounded-lg bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] font-medium hover:opacity-90 transition-opacity"
-                                >
-                                    ⬇ Download {download.title}
-                                </a>
-                            ))}
+                        <div className="p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-sm text-indigo-300">
+                            Expected delivery: 5-10 minutes
                         </div>
                     </>
                 )}
                 <Link
                     href="/"
-                    className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors block"
+                    className="text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] transition-colors block pt-4"
                 >
                     ← Back to BUY67
                 </Link>

@@ -52,8 +52,13 @@ export function BuyButton({ product }: BuyButtonProps) {
     };
 
     const handleBuyNow = async () => {
-        if (!email.trim()) {
-            setError('Please enter your email to continue');
+        if (!phone.trim() || phone === '+91') {
+            setError('Please enter your WhatsApp number to continue');
+            return;
+        }
+
+        if (!/^\+91[6789]\d{9}$/.test(phone)) {
+            setError('Invalid WhatsApp number. Must start with +91 followed by 10 digits.');
             return;
         }
 
@@ -66,7 +71,7 @@ export function BuyButton({ product }: BuyButtonProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items: [{ product_id: product.id, quantity: 1 }],
-                    buyer_email: email,
+                    buyer_phone: phone,
                     coupon_code: couponApplied ? coupon : undefined,
                 }),
             });

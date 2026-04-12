@@ -159,7 +159,8 @@ export async function POST(request: Request) {
             .insert({
                 merchant_order_id: merchantOrderId,
                 product_id: items.length === 1 ? items[0].product_id : null,
-                buyer_email,
+                buyer_email: buyer_email, // Keep for backward compatibility/SDK
+                buyer_phone,
                 amount_paise: baseupiResponse.data.amount_paise || totalPaise,
                 status: 'PENDING',
                 baseupi_order_id: baseupiResponse.data.public_order_id, // Store the public ID
