@@ -13,7 +13,7 @@ interface BuyButtonProps {
 }
 
 export function BuyButton({ product }: BuyButtonProps) {
-    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('+91');
     const [coupon, setCoupon] = useState('');
     const [discount, setDiscount] = useState(0);
     const [couponApplied, setCouponApplied] = useState(false);
@@ -109,13 +109,25 @@ export function BuyButton({ product }: BuyButtonProps) {
         <div className="space-y-6">
             <div className="space-y-3">
                 <label className="text-xs font-bold uppercase tracking-widest text-[hsl(var(--muted-foreground))] px-1">
-                    Receipt Email
+                    WhatsApp Number
                 </label>
                 <Input
-                    placeholder="Enter your email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="+919876543210"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => {
+                        let val = e.target.value;
+                        // Ensure it always starts with +91 and only contains digits after that
+                        if (!val.startsWith('+91')) {
+                            val = '+91' + val.replace(/\D/g, '');
+                        } else {
+                            const digits = val.slice(3).replace(/\D/g, '');
+                            val = '+91' + digits;
+                        }
+                        // Limit to 10 digits after +91
+                        if (val.length > 13) val = val.slice(0, 13);
+                        setPhone(val);
+                    }}
                     className="h-12 bg-[hsl(var(--background))] border-[hsl(var(--border))] focus:ring-primary/20"
                     required
                 />
