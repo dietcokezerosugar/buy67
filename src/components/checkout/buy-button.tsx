@@ -168,7 +168,7 @@ export function BuyButton({ product }: BuyButtonProps) {
                     onClick={handleBuyNow}
                     disabled={loading}
                     size="lg"
-                    className="w-full h-14 bg-[hsl(var(--primary))] hover:brightness-110 text-white font-black text-lg shadow-xl shadow-primary/20 transition-all uppercase tracking-tight"
+                    className="w-full h-14 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white font-bold text-lg shadow-[0_0_20px_rgba(124,58,237,0.3)] hover:shadow-[0_0_25px_rgba(124,58,237,0.4)] transition-all duration-300 uppercase tracking-tight border border-white/10"
                 >
                     {loading ? 'Starting Secure Flow...' : `Buy Now — ${formatPrice(discountedPrice)}`}
                 </Button>

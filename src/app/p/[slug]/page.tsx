@@ -80,12 +80,12 @@ export default async function ProductPage({ params }: Props) {
                                             className="h-10 w-10 rounded-full border border-[hsl(var(--border))]"
                                         />
                                     )}
-                                    <div>
-                                        <p className="text-sm font-medium">{creator.full_name}</p>
-                                        <p className="text-xs text-[hsl(var(--muted-foreground))]">
-                                            @{creator.username}
-                                        </p>
-                                    </div>
+                                <div>
+                                    <p className="text-sm font-medium">Aether</p>
+                                    <p className="text-xs text-[hsl(var(--muted-foreground))]">
+                                        @aether_manuals
+                                    </p>
+                                </div>
                                 </div>
                             )}
                         </div>
