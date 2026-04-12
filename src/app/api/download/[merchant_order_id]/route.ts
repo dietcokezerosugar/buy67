@@ -31,47 +31,17 @@ export async function GET(
             );
         }
 
-        // Generate signed URLs for all products in the order
-        const downloads: { title: string; url: string }[] = [];
+        // Default download: serve dld.docx from public folder
+        console.log(`[DownloadAPI] Order ${order.id} COMPLETED — returning default download link`);
 
-        console.log(`[DownloadAPI] Generating links for order ${order.id}, items:`, order.order_items?.length);
-
-        for (const item of order.order_items || []) {
-            // Handle cases where item.products might be an array or a single object
-            let productData = item.products;
-            if (Array.isArray(productData)) {
-                productData = productData[0];
-            }
-
-            const product = productData as unknown as { file_path: string; title: string } | null;
-            
-            if (!product || !product.file_path) {
-                console.warn(`[DownloadAPI] Missing product data for item in order ${order.id}`, item);
-                continue;
-            }
-
-            const { data: signedUrl, error: signError } = await supabase.storage
-                .from('products')
-                .createSignedUrl(product.file_path, 3600); // 1 hour expiry
-
-            if (signError || !signedUrl) {
-                console.error(`[DownloadAPI] Failed to create signed URL for ${product.file_path}:`, signError);
-                continue;
-            }
-
-            downloads.push({
-                title: product.title || 'Product File',
-                url: signedUrl.signedUrl,
-            });
-        }
-
-        if (downloads.length === 0) {
-            console.error(`[DownloadAPI] No downloadable files found for order ${order.id}`);
-            return NextResponse.json(
-                { success: false, error: 'Downloadable files could not be retrieved. Please contact support.' },
-                { status: 404 }
-            );
-        }
+        // Build absolute URL from the request origin
+        const origin = new URL(_request.url).origin;
+        const downloads = [
+            {
+                title: 'DLD Lab Manual',
+                url: `${origin}/dld.docx`,
+            },
+        ];
 
         return NextResponse.json({
             success: true,
