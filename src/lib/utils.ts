@@ -11,9 +11,9 @@ export function generateSlug(title: string): string {
 }
 
 export function generateMerchantOrderId(): string {
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).substring(2, 8);
-    return `B67-${timestamp}-${random}`.toUpperCase();
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `BUY67-${timestamp}-${random}`;
 }
 
 export function cn(...classes: (string | boolean | undefined | null)[]): string {
