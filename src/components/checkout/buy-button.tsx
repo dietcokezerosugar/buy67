@@ -13,7 +13,7 @@ interface BuyButtonProps {
 }
 
 export function BuyButton({ product }: BuyButtonProps) {
-    const [phone, setPhone] = useState('+91');
+    const [phone, setPhone] = useState('');
     const [coupon, setCoupon] = useState('');
     const [discount, setDiscount] = useState(0);
     const [couponApplied, setCouponApplied] = useState(false);
@@ -52,13 +52,14 @@ export function BuyButton({ product }: BuyButtonProps) {
     };
 
     const handleBuyNow = async () => {
-        if (!phone.trim() || phone === '+91') {
+        if (!phone.trim()) {
             setError('Please enter your WhatsApp number to continue');
             return;
         }
 
-        if (!/^\+91[6789]\d{9}$/.test(phone)) {
-            setError('Invalid WhatsApp number. Must start with +91 followed by 10 digits.');
+        // Validate exactly 10 digits (common for Indian numbers)
+        if (!/^[6789]\d{9}$/.test(phone)) {
+            setError('Invalid WhatsApp number. Please enter a 10-digit number.');
             return;
         }
 
@@ -71,7 +72,7 @@ export function BuyButton({ product }: BuyButtonProps) {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items: [{ product_id: product.id, quantity: 1 }],
-                    buyer_phone: phone,
+                    buyer_phone: `+91${phone}`, // Internal +91 for backend
                     coupon_code: couponApplied ? coupon : undefined,
                 }),
             });
@@ -112,20 +113,11 @@ export function BuyButton({ product }: BuyButtonProps) {
                     WhatsApp Number
                 </label>
                 <Input
-                    placeholder="+919876543210"
+                    placeholder="9876543210"
                     type="tel"
                     value={phone}
                     onChange={(e) => {
-                        let val = e.target.value;
-                        // Ensure it always starts with +91 and only contains digits after that
-                        if (!val.startsWith('+91')) {
-                            val = '+91' + val.replace(/\D/g, '');
-                        } else {
-                            const digits = val.slice(3).replace(/\D/g, '');
-                            val = '+91' + digits;
-                        }
-                        // Limit to 10 digits after +91
-                        if (val.length > 13) val = val.slice(0, 13);
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 10);
                         setPhone(val);
                     }}
                     className="h-12 bg-[hsl(var(--background))] border-[hsl(var(--border))] focus:ring-primary/20"
