@@ -22,14 +22,17 @@ function ThankYouContent() {
 
         let cancelled = false;
         let attempts = 0;
-        const maxAttempts = 20; // ~60 seconds of polling
+        const maxAttempts = 100; // ~5 minutes of polling
 
         const fetchDownloads = async () => {
             if (cancelled) return;
             attempts++;
 
             try {
-                const res = await fetch(`/api/download/${merchantOrderId}`);
+                // cache: 'no-store' is critical to prevent stale 403 responses
+                const res = await fetch(`/api/download/${merchantOrderId}`, {
+                    cache: 'no-store'
+                });
                 const data = await res.json();
 
                 if (!cancelled) {
@@ -37,15 +40,17 @@ function ThankYouContent() {
                         setDownloads(data.data.downloads);
                         setLoading(false);
                         setError('');
-                        return; // Stop polling on success
+                        return; // Success! Stop polling.
                     } else {
-                        // If it's just waiting for payment, don't stop loading yet unless we've tried too many times
+                        // If it's 403, it means the order exists but isn't completed yet.
+                        // We KEEP loading = true so the user stays on the "Processing" screen.
                         if (res.status === 403 && attempts < maxAttempts) {
                             setError('Waiting for payment verification...');
                         } else {
+                            // Definitive error or timed out
                             setError(data.error || 'Downloads not available yet');
                             setLoading(false);
-                            return; // Stop polling on error (unless we want to retry 403s)
+                            return; // Stop polling on definitive error.
                         }
                     }
                 }
@@ -59,7 +64,7 @@ function ThankYouContent() {
                 }
             }
 
-            // Schedule next poll if not cancelled and not finished
+            // Schedule next poll
             if (!cancelled && attempts < maxAttempts) {
                 setTimeout(fetchDownloads, 3000);
             }
@@ -79,8 +84,8 @@ function ThankYouContent() {
                     <>
                         <div className="text-5xl animate-pulse-subtle">⏳</div>
                         <h1 className="text-2xl font-bold">Processing payment...</h1>
-                        <p className="text-[hsl(var(--muted-foreground))]">
-                            Please wait while we verify your payment. This usually takes a few seconds.
+                        <p className="text-[hsl(var(--muted-foreground))] transition-all">
+                            {error || "Please wait while we verify your payment. This usually takes a few seconds."}
                         </p>
                     </>
                 ) : error && downloads.length === 0 ? (
