@@ -64,12 +64,14 @@ export async function POST(request: Request) {
             return NextResponse.json({ error: 'Order not found' }, { status: 404 });
         }
 
-        // Validate amount — lenient check for 100 paise (₹1) difference if needed
-        // but BaseUPI typically provides precise amounts.
-        if (order.amount_paise !== amount_paise) {
-            console.error('[Webhook] Amount mismatch:', {
+        // Validate amount — lenient check (within 100 paise) to account for Smart Amounts offsets
+        // which BaseUPI uses to track unique transactions.
+        const amountDifference = Math.abs(order.amount_paise - amount_paise);
+        if (amountDifference > 100) {
+            console.error('[Webhook] Amount mismatch beyond tolerance:', {
                 db_expected: order.amount_paise,
                 webhook_received: amount_paise,
+                difference: amountDifference
             });
             return NextResponse.json({ error: 'Amount mismatch' }, { status: 400 });
         }
