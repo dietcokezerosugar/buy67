@@ -20,6 +20,7 @@ export function BuyButton({ product }: BuyButtonProps) {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [checkoutOrderId, setCheckoutOrderId] = useState<string | null>(null);
+    const [currentMerchantOrderId, setCurrentMerchantOrderId] = useState<string | null>(null);
     const addItem = useCartStore((state) => state.addItem);
 
     const handleValidateCoupon = async () => {
@@ -74,6 +75,7 @@ export function BuyButton({ product }: BuyButtonProps) {
 
             if (data.success && data.data.public_order_id) {
                 setCheckoutOrderId(data.data.public_order_id);
+                setCurrentMerchantOrderId(data.data.merchant_order_id);
             } else {
                 setError(data.error || 'Failed to create order');
             }
@@ -86,7 +88,12 @@ export function BuyButton({ product }: BuyButtonProps) {
 
     const handlePaymentSuccess = () => {
         setCheckoutOrderId(null);
-        window.location.href = `/p/thank-you?order=${product.slug || 'success'}`;
+        if (currentMerchantOrderId) {
+            window.location.href = `/p/thank-you?order=${currentMerchantOrderId}`;
+        } else {
+            // Fallback just in case, though currentMerchantOrderId should be set
+            window.location.href = `/p/thank-you?order=${product.slug || 'success'}`;
+        }
     };
 
     const discountedPrice = discount

@@ -37,6 +37,7 @@ function ThankYouContent() {
                         setDownloads(data.data.downloads);
                         setLoading(false);
                         setError('');
+                        return; // Stop polling on success
                     } else {
                         // If it's just waiting for payment, don't stop loading yet unless we've tried too many times
                         if (res.status === 403 && attempts < maxAttempts) {
@@ -44,23 +45,30 @@ function ThankYouContent() {
                         } else {
                             setError(data.error || 'Downloads not available yet');
                             setLoading(false);
+                            return; // Stop polling on error (unless we want to retry 403s)
                         }
                     }
                 }
             } catch {
                 if (!cancelled) {
                     setError('Unable to reach server. Retrying...');
-                    if (attempts >= maxAttempts) setLoading(false);
+                    if (attempts >= maxAttempts) {
+                        setLoading(false);
+                        return;
+                    }
                 }
+            }
+
+            // Schedule next poll if not cancelled and not finished
+            if (!cancelled && attempts < maxAttempts) {
+                setTimeout(fetchDownloads, 3000);
             }
         };
 
-        const interval = setInterval(fetchDownloads, 3000);
         fetchDownloads();
 
         return () => {
             cancelled = true;
-            clearInterval(interval);
         };
     }, [merchantOrderId]);
 
